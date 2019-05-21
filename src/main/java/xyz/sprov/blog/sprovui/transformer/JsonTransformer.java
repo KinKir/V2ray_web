@@ -7,7 +7,7 @@ import spark.ResponseTransformer;
 public class JsonTransformer implements ResponseTransformer {
 
     @Override
-    public String render(Object model) {
+    public String render(Object model) throws Exception {
         return JSON.toJSONString(model, SerializerFeature.WriteMapNullValue);
     }
 

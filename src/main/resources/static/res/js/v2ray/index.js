@@ -23,14 +23,15 @@ let newTableData = [{"name":"v2rayStatus","value":"运行中","tag":"tag","color
 let app = new Vue({
     el: '#app',
     data: {
+        defaultActive: location.pathname + (!location.pathname.endsWith('/') ? '/' : ''),
         tableData: tableData,
         freshInterval: 1,
         lastVersion: '',
-        currentVersion: '',
         isLastVersion: true,
         refresh: true
     },
     methods: {
+        menuSelect: function (index) { console.log(index); location.href = index; },
         freshStatus: function () {
             if (!this.refresh) {
                 setTimeout('app.freshStatus()', this.freshInterval * 1000);
@@ -82,7 +83,6 @@ let app = new Vue({
                     if (data.success === true) {
                         this.isLastVersion = data.msg === data.obj;
                         this.lastVersion = data.msg;
-                        this.currentVersion = data.obj;
                     }
                 }
             });

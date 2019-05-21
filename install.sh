@@ -86,14 +86,13 @@ elif [[ x"${release}" == x"debian" ]]; then
     fi
 fi
 
-install_base() {
+install_bc() {
     command -v bc >/dev/null 2>&1 || yum install bc -y || apt install bc -y
-    command -v curl >/dev/null 2>&1 || yum install curl -y || apt install curl -y
 }
 
 install_java() {
     if [[ -f /usr/bin/java ]]; then
-        install_base
+        install_bc
         java_version=`/usr/bin/java -version 2>&1 | awk -F '\"' 'NR==1{print $2}' | awk -F '.' '{OFS="."; print $1,$2;}'`
         require_version=1.8
         is_ok=`echo "$java_version>=$require_version" | bc`
@@ -104,18 +103,12 @@ install_java() {
 	    exit -1
 	fi
     elif [[ x"${release}" == x"centos" ]]; then
-        yum install java-1.8.0-openjdk -y
+        yum install java-1.8.0-openjdk curl -y
     elif [[ x"${release}" == x"debian" || x"${release}" == x"ubuntu" ]]; then
-        apt install openjdk-8-jre-headless -y
+        apt install default-jre curl -y
     fi
     if [[ $? -ne 0 ]]; then
         echo -e "${red}Java环境安装失败，请检查错误信息${plain}"
-        echo -e "尝试更新系统可能可以解决该问题"
-        echo -e "CentOS: ${green}yum update${plain}"
-        echo -e "Debian / Ubuntu: ${green}apt-get update${plain}"
-        echo -e ""
-        echo -e "Debian / Ubuntu 也可以尝试用这条命令安装 java 环境，若安装 java 成功，那么重新运行安装面板即可:"
-        echo -e "${green}apt-get install openjdk-11-jre-headless -y${plain}"
         exit 1
     fi
 }
@@ -241,16 +234,11 @@ install_sprov-ui() {
     echo -e "sprov-ui stop         - 停止 sprov-ui 面板"
     echo -e "sprov-ui restart      - 重启 sprov-ui 面板"
     echo -e "sprov-ui status       - 查看 sprov-ui 状态"
-    echo -e "sprov-ui enable       - 设置 sprov-ui 开机自启"
-    echo -e "sprov-ui disable      - 取消 sprov-ui 开启自启"
     echo -e "sprov-ui log          - 查看 sprov-ui 日志"
     echo -e "sprov-ui update       - 更新 sprov-ui 面板"
     echo -e "sprov-ui install      - 安装 sprov-ui 面板"
     echo -e "sprov-ui uninstall    - 卸载 sprov-ui 面板"
     echo -e "------------------------------------------"
-    echo -e ""
-    echo -e "若未下载管理脚本，使用以下命令下载管理脚本:"
-    echo -e "wget -O /usr/bin/sprov-ui -N --no-check-certificate https://github.com/sprov065/sprov-ui/raw/master/sprov-ui.sh && chmod +x /usr/bin/sprov-ui"
     echo -e ""
     echo -e "若未安装 bbr 等加速工具，推荐使用以下命令一键安装 bbr："
     echo -e "wget --no-check-certificate https://github.com/sprov065/blog/raw/master/bbr.sh && bash bbr.sh"

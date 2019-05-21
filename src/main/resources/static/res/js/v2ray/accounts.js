@@ -108,6 +108,7 @@ let app = new Vue({
     data: {
         loading: false,
         btnLoad: false,
+        defaultActive: location.pathname + (!location.pathname.endsWith('/') ? '/' : ''),
         ip: location.hostname,
         protocols: ['shadowsocks', 'dokodemo-door', 'mtproto', 'socks', 'http'],
         config: {},
@@ -137,6 +138,7 @@ let app = new Vue({
         tls: {}
     },
     methods: {
+        menuSelect: function (index) { location.href = index; },
         getConfig: function () {
             this.loading = true;
             post({
@@ -228,7 +230,6 @@ let app = new Vue({
                 protocol: inbound.protocol,
                 listen: inbound.listen,
                 port: inbound.port,
-                oldPort: inbound.port,
                 remark: inbound.remark
             };
             if (inbound.protocol === 'vmess') {
@@ -471,10 +472,7 @@ let app = new Vue({
         editInbound: function (form) {
             this.validateForms(valid => {
                 if (valid) {
-                    let oldPort = form.oldPort;
-                    form = this.getInbound(form);
-                    form.oldPort = oldPort;
-                    this.submit('/v2ray/inbound/edit', form, this.inDL);
+                    this.submit('/v2ray/inbound/edit', this.getInbound(form), this.inDL);
                 } else {
                     this.$message({
                         message: '配置填写有误，请检查错误信息',

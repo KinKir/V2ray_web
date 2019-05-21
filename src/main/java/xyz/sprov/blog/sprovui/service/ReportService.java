@@ -2,8 +2,7 @@ package xyz.sprov.blog.sprovui.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import spark.utils.StringUtils;
-import xyz.sprov.blog.sprovui.util.Config;
+import org.apache.commons.lang3.StringUtils;
 import xyz.sprov.blog.sprovui.util.Context;
 import xyz.sprov.blog.sprovui.util.HttpUtil;
 
@@ -13,12 +12,14 @@ import java.util.concurrent.TimeUnit;
 
 public class ReportService {
 
-    private static final String REPORT_URL = "https://blog.sprov.xyz/sprov-ui/report";
+    private String reportUrl = "https://blog.sprov.xyz/sprov-ui/report";
 
     private V2rayConfigService v2rayConfigService = Context.v2rayConfigService;
 
+    private ThreadService threadService = Context.threadService;
+
     public ReportService() {
-        Context.threadService.scheduleAtFixedRate(new ReportThread(), 30, 30, TimeUnit.MINUTES);
+        threadService.scheduleAtFixedRate(new ReportThread(), 30, 30, TimeUnit.MINUTES);
     }
 
     private class ReportThread implements Runnable {
@@ -37,9 +38,8 @@ public class ReportService {
                     }
                     int n = (Integer) map.getOrDefault(protocol, 0);
                     map.put(protocol, n + 1);
-                    map.put("version", Config.currentVersion());
                 }
-                HttpUtil.post(REPORT_URL, map);
+                HttpUtil.post(reportUrl, map);
             } catch (Exception ignore) {}
         }
     }

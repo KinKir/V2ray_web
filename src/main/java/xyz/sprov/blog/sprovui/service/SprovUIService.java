@@ -1,9 +1,8 @@
 package xyz.sprov.blog.sprovui.service;
 
 import org.apache.commons.io.FileUtils;
-import spark.utils.IOUtils;
+import org.apache.commons.io.IOUtils;
 import xyz.sprov.blog.sprovui.exception.SprovUIException;
-import xyz.sprov.blog.sprovui.util.Config;
 import xyz.sprov.blog.sprovui.util.Context;
 import xyz.sprov.blog.sprovui.util.ExecUtil;
 import xyz.sprov.blog.sprovui.util.HttpUtil;
@@ -17,22 +16,24 @@ import java.util.regex.Pattern;
 
 public class SprovUIService {
 
-    private static final String GITHUB_LAST_RELEASE_URL = "https://github.com/sprov065/sprov-ui/releases/latest";
+    private ThreadService threadService = Context.threadService;
 
-    private String currentVersion = Config.currentVersion();
+    private String githubLastReleaseUrl = "https://github.com/sprov065/sprov-ui/releases/latest";
+
+    private String currentVersion = "3.0.0";
 
     private String lastVersion = currentVersion;
 
     private Pattern urlVersionPattern = Pattern.compile("https://github\\.com/[^/]+/[^/]+/releases/tag/(.+)");
 
-    private static final String JAR_DIR = "/usr/local/sprov-ui/";
+    private String jarDir = "/usr/local/sprov-ui/";
 
     public SprovUIService() {
-        Context.threadService.scheduleAtFixedRate(new GetLastVersionRunnable(), 5, 29, TimeUnit.MINUTES);
+        threadService.scheduleAtFixedRate(new GetLastVersionRunnable(), 10, 30, TimeUnit.MINUTES);
     }
 
     private String getLastVersion() throws Exception {
-        String url = HttpUtil.getRealUrl(GITHUB_LAST_RELEASE_URL);
+        String url = HttpUtil.getRealUrl(githubLastReleaseUrl);
         Matcher matcher = urlVersionPattern.matcher(url);
         if (matcher.find()) {
             return matcher.group(1);
@@ -79,8 +80,8 @@ public class SprovUIService {
         }
 
         // 备份旧版本软件包
-        File oldJar = new File(JAR_DIR + "sprov-ui.jar");
-        File copiedOldJar = new File(JAR_DIR + "sprov-ui-" + currentVersion + ".jar");
+        File oldJar = new File(jarDir + "sprov-ui.jar");
+        File copiedOldJar = new File(jarDir + "sprov-ui-" + currentVersion + ".jar");
         FileUtils.deleteQuietly(copiedOldJar);
         try {
             FileUtils.copyFile(oldJar, copiedOldJar);
@@ -90,7 +91,7 @@ public class SprovUIService {
         }
 
         // 写入新版本软件包至目录
-        File newJar = new File(JAR_DIR + "sprov-ui-" + lastVersion + ".jar");
+        File newJar = new File(jarDir + "sprov-ui-" + lastVersion + ".jar");
         FileUtils.deleteQuietly(newJar);
         try {
             FileUtils.writeByteArrayToFile(newJar, bytes);

@@ -4,13 +4,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.io.FileUtils;
-import spark.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import xyz.sprov.blog.sprovui.bean.InboundTraffic;
 import xyz.sprov.blog.sprovui.util.Context;
 import xyz.sprov.blog.sprovui.util.V2ctlUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,6 +21,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public class ExtraConfigService {
+
+    private ThreadService threadService = Context.threadService;
 
     private String configPath = "/etc/sprov-ui/v2ray-extra-config.json";
 
@@ -46,7 +49,7 @@ public class ExtraConfigService {
                 System.exit(-1);
             }
         }
-        Context.threadService.scheduleAtFixedRate(new UpdateConfigThread(), 1, 1, TimeUnit.MINUTES);
+        threadService.scheduleAtFixedRate(new UpdateConfigThread(), 1, 1, TimeUnit.MINUTES);
     }
 
     public Map<String, JSONObject> getTagInboundMap() {

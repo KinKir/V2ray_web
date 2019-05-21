@@ -4,7 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.io.FileUtils;
-import spark.utils.StringUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import xyz.sprov.blog.sprovui.exception.V2rayConfigException;
 import xyz.sprov.blog.sprovui.util.Config;
 import xyz.sprov.blog.sprovui.util.Context;
@@ -12,8 +13,8 @@ import xyz.sprov.blog.sprovui.venum.Protocol;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -149,7 +150,7 @@ public class V2rayConfigService {
         for (Object inb : inbounds) {
             JSONObject in = (JSONObject) inb;
             if (in.getIntValue("port") == port) {
-                throw new V2rayConfigException("端口 " + port + " 已使用，请填写其它端口");
+                throw new V2rayConfigException("端口已使用，请填写其它端口");
             }
         }
         inbounds.add(inbound);
@@ -221,25 +222,12 @@ public class V2rayConfigService {
      * 修改一个 inbound 协议
      */
     public void editInbound(JSONObject inbound) throws IOException {
-        Integer oldPort = inbound.getInteger("oldPort");
-        int newPort = inbound.getIntValue("port");
-        if (oldPort == null) {
-            oldPort = newPort;
-        }
+        int port = inbound.getIntValue("port");
         JSONObject config = getConfig();
         JSONArray inbounds = getInbounds(config);
-        if (oldPort != newPort) {
-            for (Object inb : inbounds) {
-                JSONObject in = (JSONObject) inb;
-                if (in.getIntValue("port") == newPort) {
-                    throw new V2rayConfigException("端口 " + newPort + " 已使用，请填写其它端口");
-                }
-            }
-        }
-        inbound.remove("oldPort");
         for (Object inb : inbounds) {
             JSONObject in = (JSONObject) inb;
-            if (in.getIntValue("port") == oldPort) {
+            if (in.getIntValue("port") == port) {
                 for (Map.Entry<String, Object> entry : inbound.entrySet()) {
                     in.put(entry.getKey(), entry.getValue());
                 }
@@ -339,9 +327,8 @@ public class V2rayConfigService {
         system.put("statsInboundDownlink", true);
         JSONArray inbounds = getInbounds(config);
         int apiPort;
-        Random random = new Random();
         do {
-            apiPort = random.nextInt(50000) + 10000;
+            apiPort = RandomUtils.nextInt(60000);
         } while (containsPort(inbounds, apiPort));
         removeTag(inbounds, "api");
         inbounds.add(JSONObject.parseObject("{" +

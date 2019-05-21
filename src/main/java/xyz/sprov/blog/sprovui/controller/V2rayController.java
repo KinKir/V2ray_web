@@ -2,7 +2,7 @@ package xyz.sprov.blog.sprovui.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import spark.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import xyz.sprov.blog.sprovui.bean.Msg;
 import xyz.sprov.blog.sprovui.exception.V2rayException;
 import xyz.sprov.blog.sprovui.service.ExtraConfigService;
@@ -24,6 +24,19 @@ public class V2rayController {
     private V2rayConfigService configService = Context.v2rayConfigService;
 
     private ExtraConfigService extraConfigService = Context.extraConfigService;
+
+//    @GetMapping("")
+    public String index() {
+        return "v2ray/index";
+    }
+
+//    @GetMapping("accounts")
+    public String accounts() {
+        return "v2ray/accounts";
+    }
+
+//    @GetMapping("clients")
+    public String clients() { return "v2ray/clients"; }
 
     /**
      * v2ray状态

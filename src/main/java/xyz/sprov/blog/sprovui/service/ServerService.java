@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,10 +32,12 @@ public class ServerService {
 //    @Autowired
     private V2rayService v2rayService = Context.v2rayService;
 
+    private ThreadService threadService = Context.threadService;
+
     private GetSystemInfoThread thread = new GetSystemInfoThread();
 
     public ServerService() {
-        Context.threadService.scheduleAtFixedRate(thread, 1, 1, TimeUnit.SECONDS);
+        threadService.scheduleAtFixedRate(thread, 1, 1, TimeUnit.SECONDS);
     }
 
     /**
@@ -201,7 +204,7 @@ public class ServerService {
          * 获取系统运行时间
          */
         public void uptime() throws IOException {
-            String str = FileUtils.readFileToString(new File("/proc/uptime"), "UTF-8");
+            String str = FileUtils.readFileToString(new File("/proc/uptime"));
             uptime = (long) Double.parseDouble(str.split(" ")[0]);
         }
 
@@ -298,7 +301,7 @@ public class ServerService {
          * [总上传流量，总下载流量]
          */
         private long[] getTraffic() throws IOException {
-            List<String> lines = FileUtils.readLines(new File("/proc/net/dev"), "UTF-8");
+            List<String> lines = FileUtils.readLines(new File("/proc/net/dev"));
             long up = 0;
             long down = 0;
             for (String line : lines) {

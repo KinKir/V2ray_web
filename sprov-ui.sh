@@ -3,7 +3,7 @@
 #======================================================
 #   System Required: CentOS 7+ / Debian 8+ / Ubuntu 16+
 #   Description: Manage sprov-ui
-#   version: v1.1.1
+#   version: v1.0.0
 #   Author: sprov
 #   Blog: https://blog.sprov.xyz
 #   Github - sprov-ui: https://github.com/sprov065/sprov-ui
@@ -36,7 +36,7 @@ green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
 
-version="v1.1.1"
+version="v1.0.0"
 conf_dir="/etc/sprov-ui/"
 conf_path="${conf_dir}sprov-ui.conf"
 
@@ -91,7 +91,7 @@ sprov_ui_status=-1
 
 confirm() {
     if [[ $# > 1 ]]; then
-        echo && read -p "$1 [默认$2]: " temp
+        read -p "$1 [默认$2]: " temp
         if [[ x"${temp}" == x"" ]]; then
             temp=$2
         fi
@@ -146,14 +146,6 @@ install() {
 }
 
 update() {
-    confirm "本功能会强制重装当前最新版，数据不会丢失，是否继续?" "n"
-    if [[ $? != 0 ]]; then
-        echo -e "${red}已取消${plain}"
-        if [[ $# == 0 ]]; then
-            before_show_menu
-        fi
-        return 0
-    fi
     install_base
     bash <(curl -L -s https://github.com/sprov065/sprov-ui/raw/master/install.sh)
     if [[ $? == 0 ]]; then
@@ -178,8 +170,8 @@ uninstall() {
     rm /etc/systemd/system/sprov-ui.service -f
     systemctl daemon-reload
     systemctl reset-failed
-    rm /etc/sprov-ui/ -rf
-    rm /usr/local/sprov-ui/ -rf
+    rm /etc/sprov-ui -rf
+    rm /usr/local/sprov-ui -rf
 
     echo ""
     echo -e "${gree}卸载成功${plain}，感谢你的使用，如果你有更多的建议或意见，可以在以下地方进行讨论: "
@@ -246,7 +238,7 @@ start() {
         sleep 2
         check_status
         if [[ $? == 0 ]]; then
-            echo -e "${green}sprov-ui 启动成功${plain}"
+            echo -e "${green}启动成功${plain}"
         else
             echo -e "${red}面板启动失败，可能是因为启动时间超过了两秒，请稍后查看日志信息${plain}"
         fi
@@ -267,7 +259,7 @@ stop() {
         sleep 2
         check_status
         if [[ $? == 1 ]]; then
-            echo -e "${green}sprov-ui 停止成功${plain}"
+            echo -e "${green}停止成功${plain}"
         else
             echo -e "${red}面板停止失败，可能是因为停止时间超过了两秒，请稍后查看日志信息${plain}"
         fi
@@ -283,36 +275,10 @@ restart() {
     sleep 2
     check_status
     if [[ $? == 0 ]]; then
-        echo -e "${green}sprov-ui 重启成功${plain}"
+        echo -e "${green}重启成功${plain}"
     else
         echo -e "${red}面板重启失败，可能是因为启动时间超过了两秒，请稍后查看日志信息${plain}"
     fi
-    if [[ $# == 0 ]]; then
-        before_show_menu
-    fi
-}
-
-enable() {
-    systemctl enable sprov-ui
-    if [[ $? == 0 ]]; then
-        echo -e "${green}sprov-ui 设置开机自启成功${plain}"
-    else
-        echo -e "${red}sprov-ui 设置开机自启失败${plain}"
-    fi
-    
-    if [[ $# == 0 ]]; then
-        before_show_menu
-    fi
-}
-
-disable() {
-    systemctl disable sprov-ui
-    if [[ $? == 0 ]]; then
-        echo -e "${green}sprov-ui 取消开机自启成功${plain}"
-    else
-        echo -e "${red}sprov-ui 取消开机自启失败${plain}"
-    fi
-    
     if [[ $# == 0 ]]; then
         before_show_menu
     fi
@@ -333,19 +299,18 @@ install_bbr() {
     else
         echo ""
         echo -e "${red}下载 bbr 安装脚本失败，请检查本机能否连接 Github${plain}"
+        before_show_menu
     fi
-
-    before_show_menu
 }
 
 update_shell() {
-    wget -O /usr/bin/sprov-ui -N --no-check-certificate https://github.com/sprov065/sprov-ui/raw/master/sprov-ui.sh
+    wget -O /usr/local/bin/sprov-ui -N --no-check-certificate https://github.com/sprov065/sprov-ui/raw/master/sprov-ui.sh
     if [[ $? != 0 ]]; then
         echo ""
         echo -e "${red}下载脚本失败，请检查本机能否连接 Github${plain}"
         before_show_menu
     else
-        chmod +x /usr/bin/sprov-ui
+        chmod +x /usr/local/bin/sprov-ui
         echo -e "${green}升级脚本成功，请重新运行脚本${plain}" && exit 0
     fi
 }
@@ -360,15 +325,6 @@ check_status() {
         return 0
     else
         return 1
-    fi
-}
-
-check_enabled() {
-    temp=$(systemctl is-enabled sprov-ui)
-    if [[ x"${temp}" == x"enabled" ]]; then
-        return 0
-    else
-        return 1;
     fi
 }
 
@@ -405,24 +361,13 @@ show_status() {
     case $? in
         0)
             echo -e "面板状态: ${green}已运行${plain}"
-            show_enable_status
             ;;
         1)
             echo -e "面板状态: ${yellow}未运行${plain}"
-            show_enable_status
             ;;
         2)
             echo -e "面板状态: ${red}未安装${plain}"
     esac
-}
-
-show_enable_status() {
-    check_enabled
-    if [[ $? == 0 ]]; then
-        echo -e "是否开机自启: ${green}是${plain}"
-    else
-        echo -e "是否开机自启: ${red}否${plain}"
-    fi
 }
 
 show_usage() {
@@ -433,8 +378,6 @@ show_usage() {
     echo "sprov-ui stop         - 停止 sprov-ui 面板"
     echo "sprov-ui restart      - 重启 sprov-ui 面板"
     echo "sprov-ui status       - 查看 sprov-ui 状态"
-    echo "sprov-ui enable       - 设置 sprov-ui 开机自启"
-    echo "sprov-ui disable      - 取消 sprov-ui 开启自启"
     echo "sprov-ui log          - 查看 sprov-ui 日志"
     echo "sprov-ui update       - 更新 sprov-ui 面板"
     echo "sprov-ui install      - 安装 sprov-ui 面板"
@@ -463,14 +406,11 @@ show_menu() {
   ${green}9.${plain} 重启 sprov-ui
  ${green}10.${plain} 查看 sprov-ui 日志
 ————————————————
- ${green}11.${plain} 设置 sprov-ui 开机自启
- ${green}12.${plain} 取消 sprov-ui 开机自启
-————————————————
- ${green}13.${plain} 一键安装 bbr (最新内核)
- ${green}14.${plain} 升级此脚本
+ ${green}11.${plain} 一键安装 bbr (最新内核)
+ ${green}12.${plain} 升级此脚本
  "
     show_status
-    echo && read -p "请输入选择 [0-14]: " num
+    echo && read -p "请输入选择 [0-12]: " num
 
     case "${num}" in
         0) exit 0
@@ -495,15 +435,11 @@ show_menu() {
         ;;
         10) check_install && show_log
         ;;
-        11) check_install && enable
+        11) install_bbr
         ;;
-        12) check_install && disable
+        12) update_shell
         ;;
-        13) install_bbr
-        ;;
-        14) update_shell
-        ;;
-        *) echo -e "${red}请输入正确的数字 [0-14]${plain}"
+        *) echo -e "${red}请输入正确的数字 [0-12]${plain}"
         ;;
     esac
 }
@@ -518,10 +454,6 @@ if [[ $# > 0 ]]; then
         "restart") check_install 0 && restart 0
         ;;
         "status") check_install 0 && show_status 0
-        ;;
-        "enable") check_install 0 && enable 0
-        ;;
-        "disable") check_install 0 && disable 0
         ;;
         "log") check_install 0 && show_log 0
         ;;
